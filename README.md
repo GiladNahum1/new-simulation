@@ -1,1 +1,1 @@
-# Ion Trap Simulation
+# ion-trap-simulation
