@@ -8,6 +8,8 @@ from scipy.interpolate import interp1d
 from scipy.constants import k
 from scipy.ndimage import gaussian_filter1d
 from scipy.interpolate import interp1d, griddata
+from scipy.interpolate import RegularGridInterpolator
+
 
 def find_closest_index(array, value):
     differences = np.abs(array - value)
@@ -152,6 +154,7 @@ class PaulTrap():
         plt.plot(self.position_vector, self.BIAS, label="BIAS")
         plt.plot(self.position_vector, self.EC_L, label="Endcap Left")
         plt.plot(self.position_vector, self.DC_L, label="DC Left")
+        plt.plot(self.position_vector, self.effective_AC_potential*20000, label="RF")
         plt.title("Electrode Potentials")
         plt.xlabel("Axial axis (mm)")
         plt.ylabel("Potential (V)")
@@ -372,3 +375,60 @@ class PaulTrap():
         # Return grid & field for further analysis if needed
         return yy, zz, VV
 
+    def plot_diagonals(self,yy, zz, VV, n=501,plot = True):
+
+        yy = np.asarray(yy)
+        zz = np.asarray(zz)
+        VV = np.asarray(VV)
+
+        # Build interpolator
+        f = RegularGridInterpolator((yy, zz), VV, bounds_error=False, fill_value=np.nan)
+
+        # --- y = z ---
+        s_lo = max(yy.min(), zz.min())
+        s_hi = min(yy.max(), zz.max())
+        s = np.linspace(s_lo, s_hi, n)
+        pts = np.column_stack([s, s])
+        V_y_eq_z = f(pts)
+        plt.figure(figsize=(6, 4))
+        plt.plot(s, V_y_eq_z, lw=1.8)
+        plt.xlabel("s along y=z (mm)")
+        plt.ylabel("Potential V (V)")
+        plt.title("Potential along y = z")
+        plt.grid(alpha=0.3)
+        plt.tight_layout()
+        plt.show()
+
+        # --- y = -z ---
+        s_lo = max(yy.min(), -zz.max())
+        s_hi = min(yy.max(), -zz.min())
+        s2 = np.linspace(s_lo, s_hi, n)
+        pts2 = np.column_stack([s2, -s2])
+        V_y_eq_minus_z = f(pts2)
+        plt.figure(figsize=(6, 4))
+        plt.plot(s2, V_y_eq_minus_z, lw=1.8, color="orange")
+        plt.xlabel("s along y=-z (mm)")
+        plt.ylabel("Potential V (V)")
+        plt.title("Potential along y = -z")
+        plt.grid(alpha=0.3)
+        plt.tight_layout()
+        plt.show()
+        return (s, V_y_eq_z), (s2, V_y_eq_minus_z)
+    def fit_parabola_radial(self,x,V,range):
+        mask = (x >= -range) & (x <= range)
+        x_slice = x[mask]
+        V_slice = V[mask]
+        coefficients = np.polyfit(x_slice,V_slice,2)
+        y_fit = np.polyval(coefficients, x_slice)
+        plt.plot(x_slice, y_fit, 'ro',ms =3, label="Parabola fit")
+        plt.plot(x_slice,V_slice,label='Potential', color = "blue")
+        plt.title('Axial Potential with Parabola Fit')
+        plt.xlabel('Axial axis (mm)')
+        plt.ylabel('Potential (V)')
+        plt.legend()
+        plt.grid()
+        plt.tight_layout()
+        plt.show()
+        a = coefficients[0]*1e6
+        omega = np.sqrt(2 * a * self.charge / self.mass)
+        return omega
