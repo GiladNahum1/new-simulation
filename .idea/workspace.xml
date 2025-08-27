@@ -4,7 +4,14 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="d4ab8da8-3dcc-4cf1-b6a2-6c0ea4c43af8" name="Changes" comment="" />
+    <list default="true" id="d4ab8da8-3dcc-4cf1-b6a2-6c0ea4c43af8" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Ziv-Meir-moleQulab/Trap simulation/PaulTrap.py" beforeDir="false" afterPath="$PROJECT_DIR$/Ziv-Meir-moleQulab/Trap simulation/PaulTrap.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Ziv-Meir-moleQulab/Trap simulation/electrodes responses/Shuttling BIAS Smoothed.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Ziv-Meir-moleQulab/Trap simulation/electrodes responses/Shuttling DC Smoothed.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Ziv-Meir-moleQulab/Trap simulation/electrodes responses/Shuttling Endcap Smoothed.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Ziv-Meir-moleQulab/Trap simulation/run_script.py" beforeDir="false" afterPath="$PROJECT_DIR$/Ziv-Meir-moleQulab/Trap simulation/run_script.py" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -20,6 +27,18 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;GiladNahum1&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/GiladNahum1/New-simulation.git&quot;,
+    &quot;accountId&quot;: &quot;8947dba4-2057-4a5a-a271-7613703fc501&quot;
+  }
+}</component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 5
 }</component>
@@ -67,6 +86,7 @@
       <workItem from="1755495245446" duration="14415000" />
       <workItem from="1755585936887" duration="6427000" />
       <workItem from="1756019627424" duration="13439000" />
+      <workItem from="1756275990795" duration="7158000" />
     </task>
     <servers />
   </component>
@@ -87,5 +107,7 @@
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/Ziv_Meir_moleQulab$PaulTrap.coverage" NAME="PaulTrap Coverage Results" MODIFIED="1755592005365" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Trap simulation" />
     <SUITE FILE_PATH="coverage/Ziv_Meir_moleQulab$run_script.coverage" NAME="run_script Coverage Results" MODIFIED="1756037809748" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Trap simulation" />
+    <SUITE FILE_PATH="coverage/Ziv_Meir_moleQulab___2$PaulTrap.coverage" NAME="PaulTrap Coverage Results" MODIFIED="1756193238073" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Ziv-Meir-moleQulab/Trap simulation" />
+    <SUITE FILE_PATH="coverage/Ziv_Meir_moleQulab___2$run_script.coverage" NAME="run_script Coverage Results" MODIFIED="1756283624853" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Ziv-Meir-moleQulab/Trap simulation" />
   </component>
 </project>

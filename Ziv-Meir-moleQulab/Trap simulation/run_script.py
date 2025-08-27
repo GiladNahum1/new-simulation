@@ -27,7 +27,10 @@ trap.plot_trap_potential()
 
 trap.plot_interactive_trap_potential()
 xSlice = 0
-yy, zz, VV = trap.plot_yz_heatmap_from_slice(filepath=os.path.join(os.getcwd(), "electrodes responses", "Long Axial RF Slice x=" + str(xSlice) + ".txt"),skiprows=8,window_y=0.71/2, window_z=0.71/2,grid_N=301,levels=0)
+#plot trap potential (raw data and specific in center with interpolation)
+trap.plot_yz_scatter_from_slice(filepath=os.path.join(os.getcwd(), "electrodes responses", "Long Axial RF Slice x=" + str(xSlice) + ".txt"),skiprows=8,window_y=0.15, window_z=0.15, title = "Potential around x=" + str(xSlice) + " mm (center)")
+yy, zz, VV = trap.plot_yz_heatmap_from_slice(filepath=os.path.join(os.getcwd(), "electrodes responses", "Long Axial RF Slice x=" + str(xSlice) + ".txt"),skiprows=8,window_y=0.15, window_z=0.15,grid_N=301,levels=0, title = "Potential around x=" + str(xSlice) + " mm (center)")
+#plot the potential on the diagonals and calculate the radial frequency of the trap
 (s1,V1),(s2,V2) = trap.plot_diagonals(yy,zz,VV)
 omega_r = trap.fit_parabola_radial(s1,V1,0.05)
 freq = omega_r/(2*np.pi)

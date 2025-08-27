@@ -316,33 +316,41 @@ class PaulTrap():
         refresh_plot()
         root.mainloop()
 
-    def plot_yz_heatmap_from_slice(self,filepath,skiprows=8,delimiter=None,window_y=None,window_z=None,grid_N=301,center_crosshair=True,levels=15,cmap="viridis",title=None):
+    def plot_yz_heatmap_from_slice(self, filepath, skiprows=8, delimiter=None,
+                                   window_y=None, window_z=None, grid_N=301, levels=15, cmap="viridis",title=None, point_size=8, point_color="k"):
         data = np.loadtxt(filepath, skiprows=skiprows, delimiter=delimiter)
-        if data.ndim != 2 or data.shape[1] < 3:
-            raise ValueError(f"Expected 3 or 4 columns, got shape {data.shape}")
+        if data.ndim != 2 or data.shape[1] < 4:
+            raise ValueError(f"Expected at least 4 columns, got shape {data.shape}")
+
         y = data[:, 1]
         z = data[:, 2]
         V = data[:, 3]
+
         # Determine symmetric plot window around (0,0)
         y_full = max(abs(np.min(y)), abs(np.max(y)))
         z_full = max(abs(np.min(z)), abs(np.max(z)))
         ymax = abs(window_y) if window_y is not None else y_full
         zmax = abs(window_z) if window_z is not None else z_full
 
-        # Build uniform grid
+        # Ignore all points outside the window
+        maskY = (y >= -ymax) & (y <= ymax)
+        maskZ = (z >= -zmax) & (z <= zmax)
+        mask = maskY & maskZ
+        y_win, z_win, V_win = y[mask], z[mask], V[mask]
+
+        # Build uniform grid from the points
         yy = np.linspace(-ymax, ymax, grid_N)
         zz = np.linspace(-zmax, zmax, grid_N)
         YY, ZZ = np.meshgrid(yy, zz, indexing="xy")
 
         # Interpolate scattered samples onto the grid
-        # cubic for smooth interior + linear fallback on edges
         from scipy.interpolate import griddata
-        pts = np.column_stack([y, z])
-        VV_cubic = griddata(pts, V, (YY, ZZ), method="cubic")
-        VV_lin = griddata(pts, V, (YY, ZZ), method="linear")
+        pts = np.column_stack([y_win, z_win])
+        VV_cubic = griddata(pts, V_win, (YY, ZZ), method="cubic")
+        VV_lin = griddata(pts, V_win, (YY, ZZ), method="linear")
         VV = np.where(np.isnan(VV_cubic), VV_lin, VV_cubic)
 
-        # Symmetric color scale around median (optional but looks nice)
+        # Symmetric color scale around median
         v_center = np.nanmedian(VV)
         v_span = np.nanmax(np.abs(VV - v_center))
         vmin, vmax = v_center - v_span, v_center + v_span
@@ -358,22 +366,90 @@ class PaulTrap():
             vmin=vmin, vmax=vmax,
             interpolation="nearest",
         )
+
+        # Overlay the original points for interpolation accuracy check
+        ax.scatter(y_win, z_win, c=V_win, cmap=cmap,
+                   vmin=vmin, vmax=vmax,
+                   s=point_size, edgecolor="w", linewidths=0.3,
+                   marker="o", label="Original data")
+
         cbar = plt.colorbar(im, ax=ax, shrink=0.9)
         cbar.set_label("Potential (V)")
 
+        ax.set_xlabel("y (mm)")
+        ax.set_ylabel("z (mm)")
+        ax.set_title(title if title else f"V(y,z) heatmap — {os.path.basename(filepath)}")
+        plt.tight_layout()
+        plt.show()
+
+        return yy, zz, VV
+
+    def plot_yz_scatter_from_slice(self, filepath, *,
+                                   skiprows=8, delimiter=None,
+                                   y_col=1, z_col=2, v_col=3,
+                                   window_y=None, window_z=None,
+                                   cmap="viridis",
+                                   center_crosshair=True,
+                                   centered_colors=False,  # False -> use min..max for more contrast
+                                   point_size=6,
+                                   axes_in_mm=False,
+                                   title=None):
+
+        data = np.loadtxt(filepath, skiprows=skiprows, delimiter=delimiter)
+        if data.ndim != 2 or data.shape[1] <= max(y_col, z_col, v_col):
+            raise ValueError(f"{os.path.basename(filepath)} has shape {data.shape}; check column indices.")
+
+        y = data[:, y_col].astype(float)
+        z = data[:, z_col].astype(float)
+        V = data[:, v_col].astype(float)
+
+
+        # Window around origin: if None, use true symmetric extent of data
+        y_full = max(abs(np.nanmin(y)), abs(np.nanmax(y)))
+        z_full = max(abs(np.nanmin(z)), abs(np.nanmax(z)))
+        ymax = abs(window_y) if window_y is not None else y_full
+        zmax = abs(window_z) if window_z is not None else z_full
+
+        # Ignore all points outside the window
+        maskY = (y >= -ymax) & (y <= ymax)
+        maskZ = (z >= -zmax) & (z <= zmax)
+        mask = maskY & maskZ
+        y_win, z_win, V_win = y[mask], z[mask], V[mask]
+
+        # Color scaling
+        if centered_colors:
+            v_center = np.nanmedian(V_win)
+            v_span = np.nanmax(np.abs(V_win - v_center))
+            vmin, vmax = v_center - v_span, v_center + v_span
+        else:
+            vmin, vmax = float(np.nanmin(V_win)), float(np.nanmax(V_win))
+
+        fig, ax = plt.subplots(figsize=(7, 6))
+        sc = ax.scatter(y, z, c=V, s=point_size, cmap=cmap, vmin=vmin, vmax=vmax)
+
+        ax.set_xlim(-ymax, ymax)
+        ax.set_ylim(-zmax, zmax)
+        ax.set_aspect("equal", adjustable="box")
+
+        cbar = plt.colorbar(sc, ax=ax, shrink=0.9)
+        cbar.set_label("Potential (V)")
 
         if center_crosshair:
             ax.axhline(0, color="w", lw=0.8, alpha=0.8)
             ax.axvline(0, color="w", lw=0.8, alpha=0.8)
 
-        ax.set_xlabel("y")
-        ax.set_ylabel("z")
-        ax.set_title(title if title else f"V(y,z) heatmap — {os.path.basename(filepath)}")
+        ax.set_xlabel("y (m)" if not axes_in_mm else "y (mm)")
+        ax.set_ylabel("z (m)" if not axes_in_mm else "z (mm)")
+        if axes_in_mm:
+            ax.xaxis.set_major_formatter(FuncFormatter(lambda v, pos: f"{v * 1e3:.1f}"))
+            ax.yaxis.set_major_formatter(FuncFormatter(lambda v, pos: f"{v * 1e3:.1f}"))
+
+        fname = os.path.basename(filepath)
+        ax.set_title(title if title else f"Raw V(y,z) scatter — {fname}")
         plt.tight_layout()
         plt.show()
 
-        # Return grid & field for further analysis if needed
-        return yy, zz, VV
+        return y, z, V
 
     def plot_diagonals(self,yy, zz, VV, n=501,plot = True):
 
@@ -414,17 +490,18 @@ class PaulTrap():
         plt.tight_layout()
         plt.show()
         return (s, V_y_eq_z), (s2, V_y_eq_minus_z)
+
     def fit_parabola_radial(self,x,V,range):
         mask = (x >= -range) & (x <= range)
         x_slice = x[mask]
         V_slice = V[mask]
         coefficients = np.polyfit(x_slice,V_slice,2)
         y_fit = np.polyval(coefficients, x_slice)
-        plt.plot(x_slice, y_fit, 'ro',ms =3, label="Parabola fit")
-        plt.plot(x_slice,V_slice,label='Potential', color = "blue")
+        plt.plot(x_slice, y_fit, label="Parabola fit", color = "red")
+        plt.plot(x_slice,V_slice,'ro',ms =1,label='Potential', color = "blue")
         plt.title('Axial Potential with Parabola Fit')
         plt.xlabel('Axial axis (mm)')
-        plt.ylabel('Potential (V)')
+        plt.ylabel('Interpolated potential (V)')
         plt.legend()
         plt.grid()
         plt.tight_layout()
