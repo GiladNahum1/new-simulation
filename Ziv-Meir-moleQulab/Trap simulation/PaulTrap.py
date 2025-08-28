@@ -9,7 +9,8 @@ from scipy.constants import k
 from scipy.ndimage import gaussian_filter1d
 from scipy.interpolate import interp1d, griddata
 from scipy.interpolate import RegularGridInterpolator
-
+import matplotlib.transforms as mtransforms
+from matplotlib.patches import Rectangle
 
 def find_closest_index(array, value):
     differences = np.abs(array - value)
@@ -149,18 +150,55 @@ class PaulTrap():
 
     def plot_electrode_potentials(self):
         plt.figure(figsize=(7, 5))
-        plt.plot(self.position_vector, self.EC_R, label="Endcap Right")
-        plt.plot(self.position_vector, self.DC_R, label="DC Right")
-        plt.plot(self.position_vector, self.BIAS, label="BIAS")
-        plt.plot(self.position_vector, self.EC_L, label="Endcap Left")
-        plt.plot(self.position_vector, self.DC_L, label="DC Left")
+        plt.plot(self.position_vector, self.EC_R, label="Endcap Right", color = "red")
+        plt.plot(self.position_vector, self.DC_R, label="DC Right", color = "blue")
+        plt.plot(self.position_vector, self.BIAS, label="BIAS", color = "green")
+        plt.plot(self.position_vector, self.EC_L, label="Endcap Left", color ="orange")
+        plt.plot(self.position_vector, self.DC_L, label="DC Left", color = "purple")
         plt.plot(self.position_vector, self.effective_AC_potential*20000, label="RF")
         plt.title("Electrode Potentials")
         plt.xlabel("Axial axis (mm)")
         plt.ylabel("Potential (V)")
         plt.legend()
         plt.tight_layout()
+        ax = plt.gca()
+        self._add_electrode_boxes(ax)
         plt.show()
+
+    def _add_electrode_boxes(self, ax, spans=None, height=0.08):
+        """
+        Draw labeled electrode boxes along the TOP edge.
+        x is in data units; y is in axes-fraction units.
+        spans: list of (x_min, x_max, label)
+        """
+        if spans is None:
+            # Non-overlapping, left→right:
+            spans = [
+                (-5.0, -2.7, "EC_L"),
+                (-2.60, -0.6, "DC_L"),
+                (-0.50, 0.50, "Bias"),
+                (0.6, 2.6, "DC_R"),
+                (2.7, 5.00, "EC_R"),  # ← EC starts after the DC span
+            ]
+
+        colors = {"EC_L": "tab:orange", "DC_L": "tab:purple", "Bias": "tab:green","EC_R": "tab:red", "DC_R": "tab:blue"}
+
+        # x: data coords, y: axes coords (0..1)
+        trans = mtransforms.blended_transform_factory(ax.transData, ax.transAxes)
+
+        y0 = 1 - height  # stick to the very top
+        for x0, x1, label in spans:
+            if x0 > x1:
+                x0, x1 = x1, x0
+            rect = Rectangle((x0, y0), x1 - x0, height,
+                             transform=trans, clip_on=False,
+                             facecolor=colors.get(label, "gray"),
+                             alpha=0.35, edgecolor="none")
+            ax.add_patch(rect)
+            xm = 0.5 * (x0 + x1)
+            ax.text(xm, y0 + 0.5 * height, label,
+                    transform=trans, ha="center", va="center",
+                    fontsize=10, color="black", weight="bold", clip_on=False)
 
     def find_local_min(self, x0, search_width=1.0):
 
@@ -273,6 +311,7 @@ class PaulTrap():
             ax.set_xlabel('Axial axis (mm)')
             ax.set_ylabel('Electric Potential (V))')
             ax.legend()
+            self._add_electrode_boxes(ax)
             canvas.draw()
 
         def update_potential(index, value):
@@ -316,8 +355,7 @@ class PaulTrap():
         refresh_plot()
         root.mainloop()
 
-    def plot_yz_heatmap_from_slice(self, filepath, skiprows=8, delimiter=None,
-                                   window_y=None, window_z=None, grid_N=301, levels=15, cmap="viridis",title=None, point_size=8, point_color="k"):
+    def plot_yz_heatmap_from_slice(self, filepath, skiprows=8, delimiter=None,window_y=None, window_z=None, grid_N=301, levels=15, cmap="viridis",title=None, point_size=8, point_color="k"):
         data = np.loadtxt(filepath, skiprows=skiprows, delimiter=delimiter)
         if data.ndim != 2 or data.shape[1] < 4:
             raise ValueError(f"Expected at least 4 columns, got shape {data.shape}")
@@ -384,16 +422,7 @@ class PaulTrap():
 
         return yy, zz, VV
 
-    def plot_yz_scatter_from_slice(self, filepath, *,
-                                   skiprows=8, delimiter=None,
-                                   y_col=1, z_col=2, v_col=3,
-                                   window_y=None, window_z=None,
-                                   cmap="viridis",
-                                   center_crosshair=True,
-                                   centered_colors=False,  # False -> use min..max for more contrast
-                                   point_size=6,
-                                   axes_in_mm=False,
-                                   title=None):
+    def plot_yz_scatter_from_slice(self, filepath, *,skiprows=8, delimiter=None,y_col=1, z_col=2, v_col=3,window_y=None, window_z=None,cmap="viridis",center_crosshair=True,centered_colors=False,point_size=6,axes_in_mm=False,title=None):
 
         data = np.loadtxt(filepath, skiprows=skiprows, delimiter=delimiter)
         if data.ndim != 2 or data.shape[1] <= max(y_col, z_col, v_col):
@@ -438,8 +467,8 @@ class PaulTrap():
             ax.axhline(0, color="w", lw=0.8, alpha=0.8)
             ax.axvline(0, color="w", lw=0.8, alpha=0.8)
 
-        ax.set_xlabel("y (m)" if not axes_in_mm else "y (mm)")
-        ax.set_ylabel("z (m)" if not axes_in_mm else "z (mm)")
+        ax.set_xlabel("y (mm)" if not axes_in_mm else "y (mm)")
+        ax.set_ylabel("z (mm)" if not axes_in_mm else "z (mm)")
         if axes_in_mm:
             ax.xaxis.set_major_formatter(FuncFormatter(lambda v, pos: f"{v * 1e3:.1f}"))
             ax.yaxis.set_major_formatter(FuncFormatter(lambda v, pos: f"{v * 1e3:.1f}"))
@@ -498,7 +527,7 @@ class PaulTrap():
         coefficients = np.polyfit(x_slice,V_slice,2)
         y_fit = np.polyval(coefficients, x_slice)
         plt.plot(x_slice, y_fit, label="Parabola fit", color = "red")
-        plt.plot(x_slice,V_slice,'ro',ms =1,label='Potential', color = "blue")
+        plt.plot(x_slice,V_slice,'o',ms =1,label='Potential', color = "blue")
         plt.title('Axial Potential with Parabola Fit')
         plt.xlabel('Axial axis (mm)')
         plt.ylabel('Interpolated potential (V)')
@@ -507,5 +536,5 @@ class PaulTrap():
         plt.tight_layout()
         plt.show()
         a = coefficients[0]*1e6
-        omega = np.sqrt(2 * a * self.charge / self.mass)
+        omega = (np.sqrt(2) * a * self.charge / (self.mass*self.RF_freq))
         return omega
