@@ -109,6 +109,8 @@ class PaulTrap():
         # Optional: very gentle smoothing to match the TXT “look”
         # (sigma=1 is small; increase to 2 if you want even smoother)
         self.AC_E = gaussian_filter1d(self.AC_E, sigma=2)
+        #self.DC_L = gaussian_filter1d(self.DC_L, sigma=2)
+        self.EC_L = gaussian_filter1d(self.EC_L, sigma=2)
 
     def mirror_potentials(self):
         self.EC_R = self.EC_L[::-1]
@@ -253,11 +255,7 @@ class PaulTrap():
         return omega_z
 
     def find_local_maxima(self, x, V):
-        peaks = []
-        for i in range(1, len(V) - 1):
-            if V[i] > V[i - 1] and V[i] > V[i + 1]:
-                peaks.append((x[i], V[i]))
-        return peaks
+        return np.max(V)
 
     def mask_local_min(self, x0, search_width=2.0, zoom_width=0.5, plot=False):
         x = self.position_vector
@@ -278,12 +276,10 @@ class PaulTrap():
 
     def get_total_voltage_barrier(self, x0, search_width=1.0, width=0.5, plot=False):
         x_min, V_min, x_slice, V_slice = self.mask_local_min(x0, search_width, width, plot)
-        peaks = self.find_local_maxima(x_slice, V_slice)
-        if not peaks:
-            raise ValueError("No peak found near the minimum.")
-        Vbarrier = float(peaks[0][1]) - float(V_min)
+        Vmax = self.find_local_maxima(x_slice, V_slice)
+        Vbarrier = float(Vmax) - float(V_min)
         Kbarrier = self.charge * Vbarrier / k
-        return Vbarrier, Kbarrier
+        return Vbarrier, Kbarrier, x_min
 
     def plot_interactive_trap_potential(self):
         root = tk.Tk()
@@ -535,6 +531,44 @@ class PaulTrap():
         plt.grid()
         plt.tight_layout()
         plt.show()
-        a = coefficients[0]*1e6
+        a = coefficients[0]*1e6 #from mm^2 to m^2
         omega = (np.sqrt(2) * a * self.charge / (self.mass*self.RF_freq))
         return omega
+
+    def min_max_delta(self,x0, search_width=None, plot = False):
+
+        x = self.position_vector
+        y = self.get_trap_potential()
+        left, right = x0 - 0.5 * search_width, x0 + 0.5 * search_width
+        mask = (x >= left) & (x <= right)
+        idx = np.flatnonzero(mask)
+        xs, ys = x[idx], y[idx]
+        imin_rel = int(np.argmin(ys))
+        imax_rel = int(np.argmax(ys))
+
+        imin, imax = idx[imin_rel], idx[imax_rel]
+
+        result = {
+            'xmin': float(x[imin]), 'ymin': float(y[imin]),
+            'xmax': float(x[imax]), 'ymax': float(y[imax]),
+            'delta_y': float(y[imax] - y[imin]),
+            'indices': {'imin': int(imin), 'imax': int(imax)}
+        }
+        if plot:
+            plt.figure(figsize=(7, 4))
+            plt.plot(x, y, label="Data")
+            plt.plot(x[imin], y[imin], 'ro',ms = 2, label="Local min")
+            plt.plot(x[imax], y[imax], 'go', ms = 2, label="Local max")
+            # vertical delta line
+            plt.vlines(x[imin], y[imin], y[imax], colors='k', linestyles='--',
+                       label=f"Δy = {result['delta_y']:.3g}")
+            plt.xlabel("z(mm)")
+            plt.ylabel("V (V)")
+            plt.legend()
+            plt.title("Local Min & Max around x0")
+            plt.tight_layout()
+            plt.show()
+        return result
+
+
+

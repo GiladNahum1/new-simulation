@@ -44,23 +44,23 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Python.PaulTrap.executor": "Run",
-    "Python.run_script.executor": "Run",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "main",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "PyPlotsConfigurable",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Python.PaulTrap.executor&quot;: &quot;Run&quot;,
+    &quot;Python.run_script.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;PyPlotsConfigurable&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
@@ -86,7 +86,10 @@
       <workItem from="1756275990795" duration="14621000" />
       <workItem from="1756310297242" duration="1339000" />
       <workItem from="1756360679012" duration="4148000" />
-      <workItem from="1756366154922" duration="15430000" />
+      <workItem from="1756366154922" duration="18359000" />
+      <workItem from="1756622821505" duration="4951000" />
+      <workItem from="1756629829511" duration="6721000" />
+      <workItem from="1756643496242" duration="1432000" />
     </task>
     <servers />
   </component>
@@ -107,7 +110,7 @@
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/Ziv_Meir_moleQulab$PaulTrap.coverage" NAME="PaulTrap Coverage Results" MODIFIED="1755592005365" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Trap simulation" />
     <SUITE FILE_PATH="coverage/Ziv_Meir_moleQulab$run_script.coverage" NAME="run_script Coverage Results" MODIFIED="1756037809748" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Trap simulation" />
-    <SUITE FILE_PATH="coverage/Ziv_Meir_moleQulab___2$PaulTrap.coverage" NAME="PaulTrap Coverage Results" MODIFIED="1756388156693" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Ziv-Meir-moleQulab/Trap simulation" />
-    <SUITE FILE_PATH="coverage/Ziv_Meir_moleQulab___2$run_script.coverage" NAME="run_script Coverage Results" MODIFIED="1756388486161" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Ziv-Meir-moleQulab/Trap simulation" />
+    <SUITE FILE_PATH="coverage/Ziv_Meir_moleQulab___2$PaulTrap.coverage" NAME="PaulTrap Coverage Results" MODIFIED="1756642878806" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Ziv-Meir-moleQulab/Trap simulation" />
+    <SUITE FILE_PATH="coverage/Ziv_Meir_moleQulab___2$run_script.coverage" NAME="run_script Coverage Results" MODIFIED="1756643953468" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Ziv-Meir-moleQulab/Trap simulation" />
   </component>
 </project>

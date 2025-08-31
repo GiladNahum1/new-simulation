@@ -3,7 +3,7 @@ import importlib
 import PaulTrap
 import matplotlib.pyplot as plt
 import os
-
+from scipy.constants import k
 importlib.reload(PaulTrap)
 from PaulTrap import PaulTrap
 
@@ -18,16 +18,37 @@ trap.plot_electrode_potentials()
 # Example DC + AC
 trap.set_DC_voltages(V_EC_L=6, V_DC_L=1, V_BIAS=0, V_DC_R=1, V_EC_R=4)
 trap.set_AC_voltage(500)
-V,K = trap.get_total_voltage_barrier(3,0.2,1,True)
-print ("Energy barrier of the trapped ion near local min is : " + str(K) + " Kelvin")
+res = trap.min_max_delta(3,0.6,True)
+omega_z = trap.get_trap_frequency(res['xmin'],0.01)
+freq = omega_z/(2*np.pi)
+print("Kelvin barrier = " + str(res['delta_y'] * trap.charge/k))
+print(f"Trap axial frequency (omega_z): 2pi * {freq * 1e-6:.2f} MHz")
+print(" (xmin,Vmin) = ", res['xmin'], res['ymin'])
+print("(Xmax,Vmax) = ", res['xmax'], res['ymax'])
+print("dy = ", res['delta_y'])
+print("Kelvin barrier = " + str(res['delta_y'] * trap.charge/k))
+
+
+#V,K,x = trap.get_total_voltage_barrier(3,0.2,1,True)
+#omega_z = trap.get_trap_frequency(x,0.3)
+#freq = omega_z/(2*np.pi)
+#print(f"Trap radial frequency (omega_z) at x = 3.036mm : 2pi * {freq * 1e-6:.2f} MHz")
+#print ("Energy barrier of the trapped ion near local min is : " + str(V) + " Kelvin")
+
+V,K,x = trap.get_total_voltage_barrier(0,0.2,0.1,True)
+omega_z = trap.get_trap_frequency(0,0.1)
+freq = omega_z/(2*np.pi)
+print(f"Trap radial frequency (omega_z) at x = 0.007mm : 2pi * {freq * 1e-6:.2f} MHz")
+print ("Energy barrier of the trapped ion near local min is : " + str(V) + " Kelvin")
+
+
 trap.plot_trap_potential()
 trap.set_DC_voltages(V_EC_L=0, V_DC_L=0, V_BIAS=0, V_DC_R=0, V_EC_R=0)
 trap.set_AC_voltage(500)
-trap.plot_trap_potential()
-
+#trap.plot_trap_potential()
 trap.plot_interactive_trap_potential()
 #insert the x {0,1,2,3,0.6,2.6} to see the slice in the radial surface.
-xSlice = 0
+xSlice = 2
 #enter the window on y,z for the scatter
 windowY = 1.5
 windowZ = 1.5
