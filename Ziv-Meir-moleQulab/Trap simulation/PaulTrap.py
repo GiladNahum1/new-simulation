@@ -29,6 +29,8 @@ def create_position_vector(self):
 
 
 class PaulTrap():
+
+    #Initialize the trap parameters
     def __init__(self, mass, RF_freq, charge=1):
         self.mass = mass * 1.66e-27        # amu -> kg
         self.charge = charge * 1.602e-19   # e -> C
@@ -52,10 +54,12 @@ class PaulTrap():
         self.V_EC_R = 0
         self.AC_Voltage = 0
 
+    #Gets data from COMSOL for each electrode
+
     def initialize_voltage_responses(self):
         script_dir = os.getcwd()
         file_EC   = os.path.join(script_dir, "electrodes responses", "Shuttling - Axial - E (EC) - Export.txt")
-        file_DC   = os.path.join(script_dir, "electrodes responses", "Shuttling - Axial - G+D (DC) - Export.txt")
+        file_DC   = os.path.join(script_dir, "electrodes responses", "High resolution G+D (DC) with fine mesh.txt")
         file_BIAS = os.path.join(script_dir, "electrodes responses", "Shuttling - Axial - H (BIAS).txt")
         file_AC_E = os.path.join(script_dir, "electrodes responses", "RF Long Axial - Electric Field (RF Barrier).txt")
 
@@ -76,14 +80,20 @@ class PaulTrap():
         self.arc_length_AC_E = data_AC_E[:, 0]
         self.AC_E = data_AC_E[:, 1]
 
+    #Creates position vector of the trap
+
     def create_position_vector(self):
         # Use RF axis for common grid
         self.position_vector = np.linspace(self.arc_length_AC_E[0],
                                            self.arc_length_AC_E[-1],
                                            len(self.arc_length_AC_E))
 
+    #Makes the center 0
+
     def shift_position_vector(self):
         self.position_vector -= self.position_vector[-1] / 2
+
+    #Match the COMSOL data to the position vector created via interpolation
 
     def interpolate_potentials(self):
         # Dedup first
@@ -112,14 +122,20 @@ class PaulTrap():
         #self.DC_L = gaussian_filter1d(self.DC_L, sigma=2)
         self.EC_L = gaussian_filter1d(self.EC_L, sigma=2)
 
+    #Uses the symmetry of DC and EC electrodes (shortcut)
+
     def mirror_potentials(self):
         self.EC_R = self.EC_L[::-1]
         self.DC_R = self.DC_L[::-1]
+
+    #Calculation of the Ponderomotive Potential from the RF electrode
 
     def add_effective_AC_potential(self):
         self.effective_AC_potential = (self.charge / (4 * self.mass * self.RF_freq ** 2)) * (self.AC_E ** 2)
         # If you want, you can also smooth the ponderomotive a touch:
         self.effective_AC_potential = gaussian_filter1d(self.effective_AC_potential, sigma=1)
+
+    #Sets the voltages on each electrode
 
     def set_DC_voltages(self, V_EC_L, V_DC_L, V_BIAS, V_DC_R, V_EC_R):
         self.V_EC_L = V_EC_L
@@ -131,6 +147,8 @@ class PaulTrap():
     def set_AC_voltage(self, AC_voltage):
         self.AC_Voltage = AC_voltage
 
+    #Uses the linearity of the laplace equation to calculate the total trap potential for a given voltage setup
+
     def get_trap_potential(self):
         return (self.V_EC_R * self.EC_R +
                 self.V_EC_L * self.EC_L +
@@ -138,6 +156,8 @@ class PaulTrap():
                 self.V_DC_L * self.DC_L +
                 self.V_BIAS * self.BIAS +
                 (self.AC_Voltage**2) * self.effective_AC_potential)
+
+    #Plotting the total trap potential
 
     def plot_trap_potential(self):
         total_potential = self.get_trap_potential()
@@ -149,6 +169,8 @@ class PaulTrap():
         plt.legend()
         plt.tight_layout()
         plt.show()
+
+    #Plotting the effect of each electrode and putting boxes on the grid to see the electrodes position
 
     def plot_electrode_potentials(self):
         plt.figure(figsize=(7, 5))
@@ -202,6 +224,8 @@ class PaulTrap():
                     transform=trans, ha="center", va="center",
                     fontsize=10, color="black", weight="bold", clip_on=False)
 
+    #Finding local minimum point (not using it in code)
+
     def find_local_min(self, x0, search_width=1.0):
 
         V = self.get_trap_potential()
@@ -219,9 +243,13 @@ class PaulTrap():
 
         return x[j], V[j], j
 
+    #Getting the voltage and energy barrier only from the RF electrode (not using in code)
+
     def get_RF_barrier(self):
         RF_barrier = np.max(self.AC_Voltage**2 * self.effective_AC_potential)
         return RF_barrier, RF_barrier * self.charge / k
+
+    #fit a minimum point to harmonic potential and plot it
 
     def fit_parabola(self, center_position, width):  # all in mm
         center_index = find_closest_index(self.position_vector, center_position)
@@ -248,14 +276,20 @@ class PaulTrap():
         plt.tight_layout()
         plt.show()
 
+    #Calculation: using parabola coefficients to get the axial frequency of the trap
+
     def get_trap_frequency(self, center_position, width):
         coefficients = self.fit_parabola(center_position, width)
         alpha = coefficients[0] * 1e6  # mm^2 -> m^2 (assuming x is mm)
         omega_z = np.sqrt(2 * alpha * self.charge / self.mass)
         return omega_z
 
+    #Finding maximum point  (not using in code)
+
     def find_local_maxima(self, x, V):
         return np.max(V)
+
+    #gets part of the position vector around a minimum point (not using in code)
 
     def mask_local_min(self, x0, search_width=2.0, zoom_width=0.5, plot=False):
         x = self.position_vector
@@ -274,12 +308,16 @@ class PaulTrap():
             plt.show()
         return x_min, V_min, x[mask], V[mask]
 
+    #Getting the total voltage and energy barrier (in volts and kelvin)
+
     def get_total_voltage_barrier(self, x0, search_width=1.0, width=0.5, plot=False):
         x_min, V_min, x_slice, V_slice = self.mask_local_min(x0, search_width, width, plot)
         Vmax = self.find_local_maxima(x_slice, V_slice)
         Vbarrier = float(Vmax) - float(V_min)
         Kbarrier = self.charge * Vbarrier / k
         return Vbarrier, Kbarrier, x_min
+
+    #Plotting an interactive GUI that allows us to easily change the voltage in each electrode and see the total potential curve
 
     def plot_interactive_trap_potential(self):
         root = tk.Tk()
@@ -351,6 +389,73 @@ class PaulTrap():
         refresh_plot()
         root.mainloop()
 
+    # Plotting the raw data from COMSOL of a thin section in the radial axis of the trap (here x is the axial axis)
+    #We can see the RF electrode with 1V and the DC/bias/EC electrodes potential is held at 0. The interesting points we need to analyze are in the middle.
+    #  We need to get the barrier and the radial frequency of the trap from it.
+
+    def plot_yz_scatter_from_slice(self, filepath, *,skiprows=8, delimiter=None,y_col=1, z_col=2, v_col=3,window_y=None, window_z=None,cmap="viridis",center_crosshair=True,centered_colors=False,point_size=6,axes_in_mm=False,title=None):
+
+        data = np.loadtxt(filepath, skiprows=skiprows, delimiter=delimiter)
+        if data.ndim != 2 or data.shape[1] <= max(y_col, z_col, v_col):
+            raise ValueError(f"{os.path.basename(filepath)} has shape {data.shape}; check column indices.")
+
+        y = data[:, y_col].astype(float)
+        z = data[:, z_col].astype(float)
+        V = data[:, v_col].astype(float)
+
+
+        # Window around origin: if None, use true symmetric extent of data
+        y_full = max(abs(np.nanmin(y)), abs(np.nanmax(y)))
+        z_full = max(abs(np.nanmin(z)), abs(np.nanmax(z)))
+        ymax = abs(window_y) if window_y is not None else y_full
+        zmax = abs(window_z) if window_z is not None else z_full
+
+        # Ignore all points outside the window
+        maskY = (y >= -ymax) & (y <= ymax)
+        maskZ = (z >= -zmax) & (z <= zmax)
+        mask = maskY & maskZ
+        y_win, z_win, V_win = y[mask], z[mask], V[mask]
+
+        # Color scaling
+        if centered_colors:
+            v_center = np.nanmedian(V_win)
+            v_span = np.nanmax(np.abs(V_win - v_center))
+            vmin, vmax = v_center - v_span, v_center + v_span
+        else:
+            vmin, vmax = float(np.nanmin(V_win)), float(np.nanmax(V_win))
+
+        fig, ax = plt.subplots(figsize=(7, 6))
+        sc = ax.scatter(y, z, c=V, s=point_size, cmap=cmap, vmin=vmin, vmax=vmax)
+
+        ax.set_xlim(-ymax, ymax)
+        ax.set_ylim(-zmax, zmax)
+        ax.set_aspect("equal", adjustable="box")
+
+        cbar = plt.colorbar(sc, ax=ax, shrink=0.9)
+        cbar.set_label("Potential (V)")
+
+        if center_crosshair:
+            ax.axhline(0, color="w", lw=0.8, alpha=0.8)
+            ax.axvline(0, color="w", lw=0.8, alpha=0.8)
+
+        ax.set_xlabel("y (mm)" if not axes_in_mm else "y (mm)")
+        ax.set_ylabel("z (mm)" if not axes_in_mm else "z (mm)")
+        if axes_in_mm:
+            ax.xaxis.set_major_formatter(FuncFormatter(lambda v, pos: f"{v * 1e3:.1f}"))
+            ax.yaxis.set_major_formatter(FuncFormatter(lambda v, pos: f"{v * 1e3:.1f}"))
+
+        fname = os.path.basename(filepath)
+        ax.set_title(title if title else f"Raw V(y,z) scatter — {fname}")
+        y_line = np.linspace(-ymax, ymax, 400)
+        ax.plot(y_line, y_line, 'r--', lw=1, label="y = z")
+        plt.tight_layout()
+        plt.show()
+
+        return y, z, V
+
+    #Plotting a heatmap of the potential in small area in the radial axis (interpolated data)
+
+
     def plot_yz_heatmap_from_slice(self, filepath, skiprows=8, delimiter=None,window_y=None, window_z=None, grid_N=301, levels=15, cmap="viridis",title=None, point_size=8, point_color="k"):
         data = np.loadtxt(filepath, skiprows=skiprows, delimiter=delimiter)
         if data.ndim != 2 or data.shape[1] < 4:
@@ -418,63 +523,7 @@ class PaulTrap():
 
         return yy, zz, VV
 
-    def plot_yz_scatter_from_slice(self, filepath, *,skiprows=8, delimiter=None,y_col=1, z_col=2, v_col=3,window_y=None, window_z=None,cmap="viridis",center_crosshair=True,centered_colors=False,point_size=6,axes_in_mm=False,title=None):
-
-        data = np.loadtxt(filepath, skiprows=skiprows, delimiter=delimiter)
-        if data.ndim != 2 or data.shape[1] <= max(y_col, z_col, v_col):
-            raise ValueError(f"{os.path.basename(filepath)} has shape {data.shape}; check column indices.")
-
-        y = data[:, y_col].astype(float)
-        z = data[:, z_col].astype(float)
-        V = data[:, v_col].astype(float)
-
-
-        # Window around origin: if None, use true symmetric extent of data
-        y_full = max(abs(np.nanmin(y)), abs(np.nanmax(y)))
-        z_full = max(abs(np.nanmin(z)), abs(np.nanmax(z)))
-        ymax = abs(window_y) if window_y is not None else y_full
-        zmax = abs(window_z) if window_z is not None else z_full
-
-        # Ignore all points outside the window
-        maskY = (y >= -ymax) & (y <= ymax)
-        maskZ = (z >= -zmax) & (z <= zmax)
-        mask = maskY & maskZ
-        y_win, z_win, V_win = y[mask], z[mask], V[mask]
-
-        # Color scaling
-        if centered_colors:
-            v_center = np.nanmedian(V_win)
-            v_span = np.nanmax(np.abs(V_win - v_center))
-            vmin, vmax = v_center - v_span, v_center + v_span
-        else:
-            vmin, vmax = float(np.nanmin(V_win)), float(np.nanmax(V_win))
-
-        fig, ax = plt.subplots(figsize=(7, 6))
-        sc = ax.scatter(y, z, c=V, s=point_size, cmap=cmap, vmin=vmin, vmax=vmax)
-
-        ax.set_xlim(-ymax, ymax)
-        ax.set_ylim(-zmax, zmax)
-        ax.set_aspect("equal", adjustable="box")
-
-        cbar = plt.colorbar(sc, ax=ax, shrink=0.9)
-        cbar.set_label("Potential (V)")
-
-        if center_crosshair:
-            ax.axhline(0, color="w", lw=0.8, alpha=0.8)
-            ax.axvline(0, color="w", lw=0.8, alpha=0.8)
-
-        ax.set_xlabel("y (mm)" if not axes_in_mm else "y (mm)")
-        ax.set_ylabel("z (mm)" if not axes_in_mm else "z (mm)")
-        if axes_in_mm:
-            ax.xaxis.set_major_formatter(FuncFormatter(lambda v, pos: f"{v * 1e3:.1f}"))
-            ax.yaxis.set_major_formatter(FuncFormatter(lambda v, pos: f"{v * 1e3:.1f}"))
-
-        fname = os.path.basename(filepath)
-        ax.set_title(title if title else f"Raw V(y,z) scatter — {fname}")
-        plt.tight_layout()
-        plt.show()
-
-        return y, z, V
+    #Plotting the potential on the diagonals (should get parabola)
 
     def plot_diagonals(self,yy, zz, VV, n=501,plot = True):
 
@@ -516,6 +565,8 @@ class PaulTrap():
         plt.show()
         return (s, V_y_eq_z), (s2, V_y_eq_minus_z)
 
+    #fitting the diagonals data to parabola and from the coefficients we derive the radial frequency, the barrier is just (detla V * m / Boltzman constant) Kelvins
+
     def fit_parabola_radial(self,x,V,range):
         mask = (x >= -range) & (x <= range)
         x_slice = x[mask]
@@ -531,9 +582,16 @@ class PaulTrap():
         plt.grid()
         plt.tight_layout()
         plt.show()
+        r0 = 0.0005
+        V0 = 1
         a = coefficients[0]*1e6 #from mm^2 to m^2
         omega = (np.sqrt(2) * a * self.charge / (self.mass*self.RF_freq))
-        return omega
+        qAna =  2*self.charge*V0/(self.mass*(self.RF_freq**2)*(r0**2))
+        qNum = 4*self.charge*(a*V0)/(self.mass*(self.RF_freq**2))
+        r0 = 1/np.sqrt(2*a)
+        return omega,qAna,qNum,a,r0
+
+    #Searching for a minimum point near x0 and after that marking the maximum points near it on each side, plotting it and returning min point, 2 max points and the voltage barrier on each side. we need to be accurate on the window and on the search width
 
     def min_max_delta(self,x0, search_width=None, plot = False):
 
@@ -544,28 +602,33 @@ class PaulTrap():
         idx = np.flatnonzero(mask)
         xs, ys = x[idx], y[idx]
         imin_rel = int(np.argmin(ys))
-        imax_rel = int(np.argmax(ys))
-
-        imin, imax = idx[imin_rel], idx[imax_rel]
-
+        imin = idx[imin_rel]
+        left, right = x[imin] - 0.5 * search_width, x[imin] + 0.5 * search_width
+        mask_L, mask_R = (x >= left) & (x <= x[imin]) , (x >= x[imin]) & (x<= right)
+        idx_L,idx_R = np.flatnonzero(mask_L), np.flatnonzero(mask_R)
+        xs_L,xs_R,ys_L,ys_R = x[idx_L], x[idx_R], y[idx_L], y[idx_R]
+        imax_rel_L,imax_rel_R = int(np.argmax(ys_L)), int(np.argmax(ys_R))
+        imax_L,imax_R = idx_L[imax_rel_L], idx_R[imax_rel_R]
         result = {
             'xmin': float(x[imin]), 'ymin': float(y[imin]),
-            'xmax': float(x[imax]), 'ymax': float(y[imax]),
-            'delta_y': float(y[imax] - y[imin]),
-            'indices': {'imin': int(imin), 'imax': int(imax)}
+            'xmax_L': float(x[imax_L]), 'ymax_L': float(y[imax_L]),
+            'xmax_R': float(x[imax_R]), 'ymax_R': float(y[imax_R]),
+            'delta_y_L': float(y[imax_L] - y[imin]),
+            'delta_y_R': float(y[imax_R] - y[imin])
         }
         if plot:
             plt.figure(figsize=(7, 4))
             plt.plot(x, y, label="Data")
             plt.plot(x[imin], y[imin], 'ro',ms = 2, label="Local min")
-            plt.plot(x[imax], y[imax], 'go', ms = 2, label="Local max")
+            plt.plot(x[imax_L], y[imax_L], 'go', ms = 2, label="Local max_L")
+            plt.plot(x[imax_R], y[imax_R], 'bo', ms=2, label="Local max_R")
             # vertical delta line
-            plt.vlines(x[imin], y[imin], y[imax], colors='k', linestyles='--',
-                       label=f"Δy = {result['delta_y']:.3g}")
+            #plt.vlines(x[imin], y[imin], np.min(y[imax_R],y[imax_L]), colors='k', linestyles='--',
+                       #label=f"ΔV = {result['delta_y']:.3g}")
             plt.xlabel("z(mm)")
             plt.ylabel("V (V)")
             plt.legend()
-            plt.title("Local Min & Max around x0")
+            plt.title("Local Min & Max around x0 = " + str(x[imin]) + "mm")
             plt.tight_layout()
             plt.show()
         return result

@@ -16,17 +16,15 @@ trap = PaulTrap(mass=m, RF_freq=RF_freq, charge=charge)
 
 trap.plot_electrode_potentials()
 # Example DC + AC
-trap.set_DC_voltages(V_EC_L=6, V_DC_L=1, V_BIAS=0, V_DC_R=1, V_EC_R=4)
+trap.set_DC_voltages(V_EC_L=8, V_DC_L=9, V_BIAS=0, V_DC_R=8, V_EC_R=0)
 trap.set_AC_voltage(500)
-res = trap.min_max_delta(3,0.6,True)
-omega_z = trap.get_trap_frequency(res['xmin'],0.01)
+res = trap.min_max_delta(2,0.8,True)
+omega_z = trap.get_trap_frequency(res['xmin'],0.1)
 freq = omega_z/(2*np.pi)
-print("Kelvin barrier = " + str(res['delta_y'] * trap.charge/k))
+print("Kelvin barrier right = " + str(res['delta_y_R'] * trap.charge/k))
+print("Kelvin barrier left = " + str(res['delta_y_L'] * trap.charge/k))
 print(f"Trap axial frequency (omega_z): 2pi * {freq * 1e-6:.2f} MHz")
 print(" (xmin,Vmin) = ", res['xmin'], res['ymin'])
-print("(Xmax,Vmax) = ", res['xmax'], res['ymax'])
-print("dy = ", res['delta_y'])
-print("Kelvin barrier = " + str(res['delta_y'] * trap.charge/k))
 
 
 #V,K,x = trap.get_total_voltage_barrier(3,0.2,1,True)
@@ -35,28 +33,34 @@ print("Kelvin barrier = " + str(res['delta_y'] * trap.charge/k))
 #print(f"Trap radial frequency (omega_z) at x = 3.036mm : 2pi * {freq * 1e-6:.2f} MHz")
 #print ("Energy barrier of the trapped ion near local min is : " + str(V) + " Kelvin")
 
-V,K,x = trap.get_total_voltage_barrier(0,0.2,0.1,True)
-omega_z = trap.get_trap_frequency(0,0.1)
-freq = omega_z/(2*np.pi)
-print(f"Trap radial frequency (omega_z) at x = 0.007mm : 2pi * {freq * 1e-6:.2f} MHz")
-print ("Energy barrier of the trapped ion near local min is : " + str(V) + " Kelvin")
+#V,K,x = trap.get_total_voltage_barrier(0,0.2,0.1,True)
+#omega_z = trap.get_trap_frequency(0,0.1)
+#freq = omega_z/(2*np.pi)
+#print(f"Trap radial frequency (omega_z) at x = 0.007mm : 2pi * {freq * 1e-6:.2f} MHz")
+#print ("Energy barrier of the trapped ion near local min is : " + str(K) + " Kelvin")
 
 
-trap.plot_trap_potential()
+#trap.plot_trap_potential()
 trap.set_DC_voltages(V_EC_L=0, V_DC_L=0, V_BIAS=0, V_DC_R=0, V_EC_R=0)
 trap.set_AC_voltage(500)
 #trap.plot_trap_potential()
-trap.plot_interactive_trap_potential()
+#trap.plot_interactive_trap_potential()
 #insert the x {0,1,2,3,0.6,2.6} to see the slice in the radial surface.
-xSlice = 2
+xSlice = 0.6
 #enter the window on y,z for the scatter
-windowY = 1.5
-windowZ = 1.5
+windowY = 2
+windowZ = 2
 #plot trap potential (raw data and specific in center with interpolation)
 trap.plot_yz_scatter_from_slice(filepath=os.path.join(os.getcwd(), "electrodes responses", "Long Axial RF Slice x=" + str(xSlice) + ".txt"),skiprows=8,window_y=windowY, window_z=windowZ, title = "Potential around x=" + str(xSlice) + " mm (center, raw data)")
 yy, zz, VV = trap.plot_yz_heatmap_from_slice(filepath=os.path.join(os.getcwd(), "electrodes responses", "Long Axial RF Slice x=" + str(xSlice) + ".txt"),skiprows=8,window_y=0.15, window_z=0.15,grid_N=301,levels=0, title = "Potential around x=" + str(xSlice) + " mm (center, interpolated)")
 #plot the potential on the diagonals and calculate the radial frequency of the trap (along the diagonal y=z)
 (s1,V1),(s2,V2) = trap.plot_diagonals(yy,zz,VV)
-omega_r = trap.fit_parabola_radial(s1,V1,0.05)
+omega_r,qAna,qNum,alpha,r0 = trap.fit_parabola_radial(s1,V1,0.05)
 freq = omega_r/(2*np.pi)
-print(f"Trap radial frequency (omega_r): 2pi * {freq * 1e-6:.2f} MHz")
+print(f"Trap radial frequency (omega_r) for 320V RF: 2pi * {freq*320 * 1e-6:.2f} MHz")
+print(qAna)
+print(qNum)
+print (r0)
+
+
+
