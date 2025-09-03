@@ -90,7 +90,7 @@
       <workItem from="1756622821505" duration="4951000" />
       <workItem from="1756629829511" duration="6721000" />
       <workItem from="1756643496242" duration="50605000" />
-      <workItem from="1756901845453" duration="1648000" />
+      <workItem from="1756901845453" duration="3653000" />
     </task>
     <servers />
   </component>
@@ -112,6 +112,6 @@
     <SUITE FILE_PATH="coverage/Ziv_Meir_moleQulab$PaulTrap.coverage" NAME="PaulTrap Coverage Results" MODIFIED="1755592005365" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Trap simulation" />
     <SUITE FILE_PATH="coverage/Ziv_Meir_moleQulab$run_script.coverage" NAME="run_script Coverage Results" MODIFIED="1756037809748" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Trap simulation" />
     <SUITE FILE_PATH="coverage/Ziv_Meir_moleQulab___2$PaulTrap.coverage" NAME="PaulTrap Coverage Results" MODIFIED="1756901000872" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Ziv-Meir-moleQulab/Trap simulation" />
-    <SUITE FILE_PATH="coverage/Ziv_Meir_moleQulab___2$run_script.coverage" NAME="run_script Coverage Results" MODIFIED="1756902657810" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Ziv-Meir-moleQulab/Trap simulation" />
+    <SUITE FILE_PATH="coverage/Ziv_Meir_moleQulab___2$run_script.coverage" NAME="run_script Coverage Results" MODIFIED="1756908462784" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Ziv-Meir-moleQulab/Trap simulation" />
   </component>
 </project>
