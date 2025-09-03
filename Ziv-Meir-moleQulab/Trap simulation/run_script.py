@@ -46,21 +46,28 @@ trap.set_AC_voltage(500)
 #trap.plot_trap_potential()
 #trap.plot_interactive_trap_potential()
 #insert the x {0,1,2,3,0.6,2.6} to see the slice in the radial surface.
-xSlice = 0.6
-#enter the window on y,z for the scatter
-windowY = 2
-windowZ = 2
-#plot trap potential (raw data and specific in center with interpolation)
-trap.plot_yz_scatter_from_slice(filepath=os.path.join(os.getcwd(), "electrodes responses", "Long Axial RF Slice x=" + str(xSlice) + ".txt"),skiprows=8,window_y=windowY, window_z=windowZ, title = "Potential around x=" + str(xSlice) + " mm (center, raw data)")
-yy, zz, VV = trap.plot_yz_heatmap_from_slice(filepath=os.path.join(os.getcwd(), "electrodes responses", "Long Axial RF Slice x=" + str(xSlice) + ".txt"),skiprows=8,window_y=0.15, window_z=0.15,grid_N=301,levels=0, title = "Potential around x=" + str(xSlice) + " mm (center, interpolated)")
-#plot the potential on the diagonals and calculate the radial frequency of the trap (along the diagonal y=z)
-(s1,V1),(s2,V2) = trap.plot_diagonals(yy,zz,VV)
-omega_r,qAna,qNum,alpha,r0 = trap.fit_parabola_radial(s1,V1,0.05)
-freq = omega_r/(2*np.pi)
-print(f"Trap radial frequency (omega_r) for 320V RF: 2pi * {freq*320 * 1e-6:.2f} MHz")
-print(qAna)
-print(qNum)
-print (r0)
+xSlices = (0,0.6,1,2,2.5,2.6,2.7,2.8,2.9,3)
+freqs = []
+for xSlice in xSlices:
+    #enter the window on y,z for the scatter
+    windowY = 2
+    windowZ = 2
+    #plot trap potential (raw data and specific in center with interpolation)
+    trap.plot_yz_scatter_from_slice(filepath=os.path.join(os.getcwd(), "electrodes responses", "Long Axial RF Slice x=" + str(xSlice) + ".txt"),skiprows=8,window_y=windowY, window_z=windowZ, title = "Potential around x=" + str(xSlice) + " mm (center, raw data)")
+    yy, zz, VV = trap.plot_yz_heatmap_from_slice(filepath=os.path.join(os.getcwd(), "electrodes responses", "Long Axial RF Slice x=" + str(xSlice) + ".txt"),skiprows=8,window_y=0.15, window_z=0.15,grid_N=301,levels=0, title = "Potential around x=" + str(xSlice) + " mm (center, interpolated)")
+    #plot the potential on the diagonals and calculate the radial frequency of the trap (along the diagonal y=z)
+    r,V = trap.plot_diagonal_angle(yy, zz, VV, theta_deg=45, plot=True)
+    omega_r,qa,q,a,r0,b = trap.fit_parabola_radial(r,V,0.05)
+    freq = omega_r / (2 * np.pi)
+    print(f"Trap radial frequency (omega_r) for 320V RF: 2pi * {freq * 320 * 1e-6:.2f} MHz")
+    freqs.append(freq* 320 * 1e-6)
+    print("angle = " + str(45)+ "---" + "r0 = " + str(r0*1e3) + "mm")
+
+
+
+
+
+
 
 
 

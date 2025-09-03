@@ -131,6 +131,7 @@ class PaulTrap():
     #Calculation of the Ponderomotive Potential from the RF electrode
 
     def add_effective_AC_potential(self):
+        #self.AC_E is the electric field
         self.effective_AC_potential = (self.charge / (4 * self.mass * self.RF_freq ** 2)) * (self.AC_E ** 2)
         # If you want, you can also smooth the ponderomotive a touch:
         self.effective_AC_potential = gaussian_filter1d(self.effective_AC_potential, sigma=1)
@@ -589,7 +590,8 @@ class PaulTrap():
         qAna =  2*self.charge*V0/(self.mass*(self.RF_freq**2)*(r0**2))
         qNum = 4*self.charge*(a*V0)/(self.mass*(self.RF_freq**2))
         r0 = 1/np.sqrt(2*a)
-        return omega,qAna,qNum,a,r0
+        b = coefficients[1]*1e3
+        return omega,qAna,qNum,a,r0,b
 
     #Searching for a minimum point near x0 and after that marking the maximum points near it on each side, plotting it and returning min point, 2 max points and the voltage barrier on each side. we need to be accurate on the window and on the search width
 
@@ -632,6 +634,94 @@ class PaulTrap():
             plt.tight_layout()
             plt.show()
         return result
+
+    def plot_axes_from_heatmap(self, yy, zz, VV, plot=True):
+        """
+        Plot potential along y=0 (z-axis) and z=0 (y-axis) from the interpolated grid.
+        """
+        yy = np.asarray(yy)
+        zz = np.asarray(zz)
+        VV = np.asarray(VV)
+
+        # Build interpolator
+        f = RegularGridInterpolator((yy, zz), VV, bounds_error=False, fill_value=np.nan)
+
+        # --- z = 0 (y-axis) ---
+        s = np.linspace(yy.min(), yy.max(), 500)
+        pts = np.column_stack([s, np.zeros_like(s)])
+        V_y_axis = f(pts)
+
+        if plot:
+            plt.figure(figsize=(6, 4))
+            plt.plot(s, V_y_axis, lw=1.8, label="z=0 (y-axis)")
+            plt.xlabel("y (mm)")
+            plt.ylabel("Potential V (V)")
+            plt.title("Potential along z = 0 (y-axis)")
+            plt.grid(alpha=0.3)
+            plt.legend()
+            plt.tight_layout()
+            plt.show()
+
+        # --- y = 0 (z-axis) ---
+        s2 = np.linspace(zz.min(), zz.max(), 500)
+        pts2 = np.column_stack([np.zeros_like(s2), s2])
+        V_z_axis = f(pts2)
+
+        if plot:
+            plt.figure(figsize=(6, 4))
+            plt.plot(s2, V_z_axis, lw=1.8, color="orange", label="y=0 (z-axis)")
+            plt.xlabel("z (mm)")
+            plt.ylabel("Potential V (V)")
+            plt.title("Potential along y = 0 (z-axis)")
+            plt.grid(alpha=0.3)
+            plt.legend()
+            plt.tight_layout()
+            plt.show()
+
+        return (s, V_y_axis), (s2, V_z_axis)
+
+    def plot_diagonal_angle(self, yy, zz, VV, theta_deg=45, r_max=None, npts=401, plot=True):
+        """
+        Sample V(y,z) along a diagonal at angle theta (deg) through (0,0).
+        theta =  45 → y =  z
+        theta = -45 → y = -z
+        theta =   0 → along +y
+        theta =  90 → along +z
+        """
+
+        yy = np.asarray(yy).ravel()  # 1-D coords
+        zz = np.asarray(zz).ravel()
+        VV = np.asarray(VV)  # 2-D field on (zz, yy) grid because meshgrid(..., indexing="xy")
+
+        # RegularGridInterpolator expects the axes in the same order as VV's dimensions.
+        # With indexing="xy", VV.shape == (len(zz), len(yy)). Use VV.T if you want (yy, zz).
+        f = RegularGridInterpolator((yy, zz), VV.T, bounds_error=False, fill_value=np.nan)
+
+        theta = np.deg2rad(theta_deg)
+        if r_max is None:
+            r_max = min(yy.max(), zz.max())
+        r = np.linspace(-r_max, r_max, npts)
+
+        # Parametrize the line
+        y = r * np.cos(theta)
+        z = r * np.sin(theta)
+        pts = np.column_stack([y, z])  # order (y, z) to match f's (yy, zz)
+
+        V_line = f(pts)
+
+        if plot:
+            plt.figure(figsize=(6, 4))
+            plt.plot(r, V_line, lw=1.8)
+            plt.xlabel("r (mm along diagonal)")
+            plt.ylabel("Potential V (V)")
+            plt.title(f"Diagonal cut θ={theta_deg}°")
+            plt.grid(alpha=0.3)
+            plt.tight_layout()
+            plt.show()
+
+        return r, V_line
+
+
 
 
 
