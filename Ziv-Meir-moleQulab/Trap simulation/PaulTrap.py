@@ -11,6 +11,7 @@ from scipy.interpolate import interp1d, griddata
 from scipy.interpolate import RegularGridInterpolator
 import matplotlib.transforms as mtransforms
 from matplotlib.patches import Rectangle
+from matplotlib.animation import FuncAnimation, PillowWriter
 
 def find_closest_index(array, value):
     differences = np.abs(array - value)
@@ -666,6 +667,78 @@ class PaulTrap():
             plt.show()
 
         return r, V_line
+    def animate_voltage_path_gif(self,voltage_points,*,seconds_per_segment=2.0,fps=30,save_path="transition.gif",include_boxes=True,dpi=120,):
+        # Ensure proper array format
+        voltage_points = np.asarray(voltage_points, dtype=float)
+        assert voltage_points.ndim == 2 and voltage_points.shape[1] == 6, \
+            "voltage_points must be shape (N, 6)"
+
+        n_segments = len(voltage_points) - 1
+        frames_per_segment = max(2, int(round(seconds_per_segment * fps)))
+        total_frames = n_segments * frames_per_segment
+
+        # Build interpolated path
+        path = []
+        for i in range(n_segments):
+            seg = np.linspace(
+                voltage_points[i], voltage_points[i + 1],
+                frames_per_segment, endpoint=False
+            )
+            path.append(seg)
+        path.append(voltage_points[-1][None, :])  # include last point
+        path = np.vstack(path)
+
+        # Initialize trap with first point
+        self.set_DC_voltages(*path[0, :5])
+        self.set_AC_voltage(path[0, 5])
+
+        fig, ax = plt.subplots(figsize=(7, 5), dpi=dpi)
+        (line,) = ax.plot([], [], lw=2, label="Total Potential")
+        ax.set_xlabel("Axial axis (mm)")
+        ax.set_ylabel("Potential (V)")
+        ax.set_xlim(float(self.position_vector.min()), float(self.position_vector.max()))
+        ax.legend(loc="best")
+
+        # Initial y-limits
+        V0 = self.get_trap_potential()
+        pad = 0.05 * max(1e-12, np.ptp(V0))
+        ax.set_ylim(float(V0.min() - pad), float(V0.max() + pad))
+
+        # Optional electrode boxes
+        if include_boxes and hasattr(self, "_add_electrode_boxes"):
+            try:
+                self._add_electrode_boxes(ax)
+            except Exception:
+                pass
+
+        def init():
+            line.set_data([], [])
+            return (line,)
+
+        def update(i):
+            vals = path[i]
+            self.set_DC_voltages(*vals[:5])
+            self.set_AC_voltage(vals[5])
+
+            V = self.get_trap_potential()
+            line.set_data(self.position_vector, V)
+
+            pad = 0.05 * max(1e-12, np.ptp(V))
+            ax.set_ylim(float(V.min() - pad), float(V.max() + pad))
+
+            ax.set_title(
+                f"Frame {i + 1}/{total_frames} | "
+                f"EC_L={vals[0]:.1f}, DC_L={vals[1]:.1f}, "
+                f"Bias={vals[2]:.1f}, DC_R={vals[3]:.1f}, "
+                f"EC_R={vals[4]:.1f}, AC={vals[5]:.0f}"
+            )
+            return (line,)
+
+        ani = FuncAnimation(fig, update, frames=total_frames, init_func=init, blit=True)
+        ani.save(save_path, writer=PillowWriter(fps=fps))
+        plt.close(fig)
+
+
 
 
 

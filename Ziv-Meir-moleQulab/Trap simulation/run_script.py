@@ -27,6 +27,24 @@ print(f"Trap axial frequency (omega_z): 2pi * {freq * 1e-6:.2f} MHz")
 print(" (xmin,Vmin) = ", res['xmin'], res['ymin'])
 
 
+voltages_path = [
+    [0, 0,0 ,0 ,0 ,0],
+    [0, 1, 0, 1,   0,   0],
+    [2, 1, 0, 1,   2, 500],
+    [2, 1, 8, 1,   2, 500],
+    [8, 1, 8, 1,   0, 500],
+    [8, 1, 8, 7.5, 0, 500],
+    [8, 1, 0, 7.5, 0, 500],
+    [8, 9, 0, 7.5, 0, 500],
+]
+
+# Call the animation method from your trap object
+trap.animate_voltage_path_gif(
+    voltages_path,
+    seconds_per_segment=2.0,    # how long each interval lasts
+    fps=30,                     # frames per second
+    save_path="trap_intervals.gif"  # file name / path
+)
 #V,K,x = trap.get_total_voltage_barrier(3,0.2,1,True)
 #omega_z = trap.get_trap_frequency(x,0.3)
 #freq = omega_z/(2*np.pi)
@@ -38,8 +56,6 @@ print(" (xmin,Vmin) = ", res['xmin'], res['ymin'])
 #freq = omega_z/(2*np.pi)
 #print(f"Trap radial frequency (omega_z) at x = 0.007mm : 2pi * {freq * 1e-6:.2f} MHz")
 #print ("Energy barrier of the trapped ion near local min is : " + str(K) + " Kelvin")
-
-
 #trap.plot_trap_potential()
 trap.set_DC_voltages(V_EC_L=0, V_DC_L=0, V_BIAS=0, V_DC_R=0, V_EC_R=0)
 trap.set_AC_voltage(500)
@@ -55,9 +71,9 @@ omega_r,qa,q,a,r0,b = trap.fit_parabola_radial(r,V,0.05)
 freq = omega_r / (2 * np.pi)
 print(f"Trap radial frequency (omega_r) for 320V RF: 2pi * {freq * 320 * 1e-6:.2f} MHz")
 #trap.plot_trap_potential()
-#trap.plot_interactive_trap_potential()
+trap.plot_interactive_trap_potential()
 #insert the x {0,1,2,3,0.6,2.6} to see the slice in the radial surface.
-xSlices = (0,0.6,1,2,2.5,2.6,2.7,2.8,2.9,3)
+xSlices = (0,0.6,1,2,2.5,2.6,2.7,2.8,2.825,2.85,2.875,2.9,3)
 freqs = []
 for xSlice in xSlices:
     #enter the window on y,z for the scatter
@@ -73,6 +89,13 @@ for xSlice in xSlices:
     print(f"Trap radial frequency (omega_r) for 320V RF: 2pi * {freq * 320 * 1e-6:.2f} MHz")
     freqs.append(freq* 320 * 1e-6)
     print("angle = " + str(45)+ "---" + "r0 = " + str(r0*1e3) + "mm")
+plt.scatter(xSlices, freqs)
+plt.axvline(x=2.6, color='red', linestyle='--')
+plt.xlabel("axial position (mm)")
+plt.ylabel("radial frequency for 320V(MHz)")
+plt.title("Radial frequency vs Axial position")
+plt.grid(True)
+plt.show()
 
 
 
