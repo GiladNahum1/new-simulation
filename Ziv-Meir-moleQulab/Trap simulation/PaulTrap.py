@@ -81,6 +81,7 @@ class PaulTrap():
         self.arc_length_AC_E = data_AC_E[:, 0]
         self.AC_E = data_AC_E[:, 1]
 
+
     def create_position_vector(self):
         #
         """Creates position vector of the trap (linspace
@@ -146,6 +147,7 @@ class PaulTrap():
         self.V_DC_R = V_DC_R
         self.V_EC_R = V_EC_R
 
+
     def set_AC_voltage(self, AC_voltage):
         """Sets the voltage on the RF electrode"""
         self.AC_Voltage = AC_voltage
@@ -160,6 +162,7 @@ class PaulTrap():
                 self.V_DC_L * self.DC_L +
                 self.V_BIAS * self.BIAS +
                 (self.AC_Voltage**2) * self.effective_AC_potential)
+
 
     def plot_trap_potential(self):
         """Plotting the total trap potential"""
@@ -191,6 +194,7 @@ class PaulTrap():
         ax = plt.gca()
         self._add_electrode_boxes(ax)
         plt.show()
+
 
     def _add_electrode_boxes(self, ax, spans=None, height=0.08):
         """Putting boxes on the grid to see the electrodes position"""
@@ -260,6 +264,7 @@ class PaulTrap():
         self.plot_with_fit(coefficients, start_index, end_index)
         return coefficients
 
+
     def plot_with_fit(self, coefficients, start_index, end_index):
         """Use coefficients of the parabola to plot the fit over the potential and position vector"""
         plt.figure(figsize=(7, 5))
@@ -275,6 +280,7 @@ class PaulTrap():
         plt.tight_layout()
         plt.show()
 
+
     def get_trap_frequency(self, center_position, width):
         """Calculation: using parabola coefficients to get the axial frequency of the trap"""
         coefficients = self.fit_parabola(center_position, width)
@@ -282,9 +288,11 @@ class PaulTrap():
         omega_z = np.sqrt(2 * alpha * self.charge / self.mass)
         return omega_z
 
+
     def find_local_maxima(self, x, V):
         """Finding maximum point  (not using in code)"""
         return np.max(V)
+
 
     def mask_local_min(self, x0, search_width=2.0, zoom_width=0.5, plot=False):
         """gets part of the position vector around a minimum point (not using in code)"""
@@ -304,6 +312,7 @@ class PaulTrap():
             plt.show()
         return x_min, V_min, x[mask], V[mask]
 
+
     def get_total_voltage_barrier(self, x0, search_width=1.0, width=0.5, plot=False):
         """Getting the total voltage and energy barrier (in volts and kelvin)"""
         x_min, V_min, x_slice, V_slice = self.mask_local_min(x0, search_width, width, plot)
@@ -311,6 +320,7 @@ class PaulTrap():
         Vbarrier = float(Vmax) - float(V_min)
         Kbarrier = self.charge * Vbarrier / k
         return Vbarrier, Kbarrier, x_min
+
 
     def plot_interactive_trap_potential(self):
         """Plotting an interactive GUI that allows us to easily change the voltage
@@ -384,6 +394,7 @@ class PaulTrap():
         refresh_plot()
         root.mainloop()
 
+
     def plot_yz_scatter_from_slice(self, filepath, *,skiprows=8, delimiter=None,y_col=1, z_col=2, v_col=3,window_y=None, window_z=None,cmap="viridis",center_crosshair=True,centered_colors=False,point_size=6,axes_in_mm=False,title=None):
         """Plotting the raw data from COMSOL of a thin section in the radial axis of the trap
         (here x is the axial axis) We can see the RF electrode with 1V and the DC/bias/EC electrodes potential
@@ -446,6 +457,7 @@ class PaulTrap():
         plt.show()
 
         return y, z, V
+
 
     def plot_yz_heatmap_from_slice(self, filepath, skiprows=8, delimiter=None,window_y=None, window_z=None, grid_N=301, levels=15, cmap="viridis",title=None, point_size=8, point_color="k"):
         """Plotting a heatmap of the potential in small area in the radial axis (interpolated data)"""
@@ -516,6 +528,7 @@ class PaulTrap():
 
         return yy, zz, VV
 
+
     def plot_diagonals(self,yy, zz, VV, n=501,plot = True):
 
         """Plotting the potential on the diagonals (should get parabola)
@@ -558,9 +571,11 @@ class PaulTrap():
         plt.show()
         return (s, V_y_eq_z), (s2, V_y_eq_minus_z)
 
-    #fitting the diagonals data to parabola and from the coefficients we derive the radial frequency, the barrier is just (detla V * m / Boltzman constant) Kelvins
 
     def fit_parabola_radial(self,x,V,range):
+        """Fitting the radial potential along a diagonal to harmonic potential.
+        Plotting and getting the frequency, q factor of the mathieu equation,
+        the parabola coefficients and r0 in the mathieu equation"""
         mask = (x >= -range) & (x <= range)
         x_slice = x[mask]
         V_slice = V[mask]
@@ -583,7 +598,6 @@ class PaulTrap():
         r0 = 1/np.sqrt(2*a)
         return omega,q,a,r0
 
-    #Searching for a minimum point near x0 and after that marking the maximum points near it on each side, plotting it and returning min point, 2 max points and the voltage barrier on each side. we need to be accurate on the window and on the search width
 
     def min_max_delta(self,x0, search_width=None, plot = False):
 
@@ -625,6 +639,7 @@ class PaulTrap():
             plt.show()
         return result
 
+
     def plot_diagonal_angle(self, yy, zz, VV, theta_deg=45, r_max=None, npts=401, plot=True):
         """
         Sample V(y,z) along a diagonal at angle theta (deg) through (0,0).
@@ -665,8 +680,10 @@ class PaulTrap():
             plt.show()
 
         return r, V_line
+
+
     def animate_voltage_path_gif(self,voltage_points,*,seconds_per_segment=2.0,fps=30,save_path="transition.gif",include_boxes=True,dpi=120,):
-        # Ensure proper array format
+        """Does the animation of voltage path, creates a gif file"""
         voltage_points = np.asarray(voltage_points, dtype=float)
         assert voltage_points.ndim == 2 and voltage_points.shape[1] == 6, \
             "voltage_points must be shape (N, 6)"

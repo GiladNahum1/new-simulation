@@ -22,11 +22,12 @@ trap.plot_electrode_potentials()
 trap.set_DC_voltages(V_EC_L=0, V_DC_L=17, V_BIAS=0, V_DC_R=17, V_EC_R=0)
 trap.set_AC_voltage(AC_voltage=0)
 trap.plot_trap_potential()
+"""Gets the trap frequency"""
 omega_z = trap.get_trap_frequency(center_position=0,width = 1)
 freq = omega_z/(2*np.pi)
 print(f"Trap axial frequency (omega_z): 2pi * {freq * 1e-6:.2f} MHz")
 
-"""Example for an arbitrary electrode configuration"""
+"""Example for another electrode configuration"""
 "Sets the electrodes voltages"
 trap.set_DC_voltages(V_EC_L=8, V_DC_L=9, V_BIAS=0, V_DC_R=7.5, V_EC_R=0)
 trap.set_AC_voltage(AC_voltage=500)
@@ -41,6 +42,12 @@ print("Kelvin barrier right = " + str(res['delta_y_R'] * trap.charge/k))
 print("Kelvin barrier left = " + str(res['delta_y_L'] * trap.charge/k))
 print(f"Trap axial frequency (omega_z): 2pi * {freq * 1e-6:.2f} MHz")
 print(" (xmin,Vmin) = ", res['xmin'], res['ymin'])
+"""at x=0"""
+omega_z = trap.get_trap_frequency(0.035,0.1)
+freq = omega_z/(2*np.pi)
+print(f"Trap axial frequency (omega_z): 2pi * {freq * 1e-6:.2f} MHz")
+
+
 
 """Interactive trap potential"""
 trap.plot_interactive_trap_potential()
