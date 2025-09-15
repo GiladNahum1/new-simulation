@@ -579,11 +579,9 @@ class PaulTrap():
         V0 = 1
         a = coefficients[0]*1e6 #from mm^2 to m^2
         omega = (np.sqrt(2) * a * self.charge / (self.mass*self.RF_freq))
-        qAna =  2*self.charge*V0/(self.mass*(self.RF_freq**2)*(r0**2))
-        qNum = 4*self.charge*(a*V0)/(self.mass*(self.RF_freq**2))
+        q = 4*self.charge*(a*V0)/(self.mass*(self.RF_freq**2))
         r0 = 1/np.sqrt(2*a)
-        b = coefficients[1]*1e3
-        return omega,qAna,qNum,a,r0,b
+        return omega,q,a,r0
 
     #Searching for a minimum point near x0 and after that marking the maximum points near it on each side, plotting it and returning min point, 2 max points and the voltage barrier on each side. we need to be accurate on the window and on the search width
 
