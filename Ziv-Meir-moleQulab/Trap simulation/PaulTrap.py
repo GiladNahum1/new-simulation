@@ -138,7 +138,6 @@ class PaulTrap():
         self.effective_AC_potential = gaussian_filter1d(self.effective_AC_potential, sigma=1)
 
 
-
     def set_DC_voltages(self, V_EC_L, V_DC_L, V_BIAS, V_DC_R, V_EC_R):
         """Sets the voltages on each electrode (DC, EC and Bias)"""
         self.V_EC_L = V_EC_L

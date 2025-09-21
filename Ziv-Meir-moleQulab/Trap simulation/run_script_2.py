@@ -15,6 +15,11 @@ from scipy.optimize import root_scalar
 from scipy.ndimage import gaussian_filter1d
 from scipy.optimize import minimize_scalar
 
+def trap_length_scale(Z=1):
+    nu = trap.get_trap_frequency(0, 0.5)
+    M = trap.mass     # ion mass in kg
+    l_cubed = (Z**2 * e**2) / (4 * np.pi * epsilon_0 * M * nu**2)
+    return l_cubed**(1/3)
 
 """Trap parameters"""
 m = 40  # 40Ca+
@@ -49,9 +54,11 @@ trap = PaulTrap(mass=m, RF_freq=RF_freq, charge=charge)
  by adding them together and finding the minimum points we can get the equilibrium point"""
 """The code works as it should but the COMSOL simulation isn't enough precise in these scales (1~10 μm)
 In this case we should maybe try a different approach"""
-for v in [13,14,15,16,17]:
+for v in [1,2,3,4,5,6,7,8]:
+    print("Trap v={}".format(v))
     # --- set trap configuration ---
-    trap.set_DC_voltages(20, 17, v, 17, 20)
+    trap.set_DC_voltages(0, 17, v, 17, 0)
+    trap.set_AC_voltage(500)
     e = trap.charge
     k_c = 1 / (4 * pi * epsilon_0)
 
@@ -60,7 +67,7 @@ for v in [13,14,15,16,17]:
     V_vals = trap.get_trap_potential()
 
     # --- restrict data to 0 → 10 µm ---
-    mask = (z >= 0) & (z <= 10e-6)
+    mask = (z >= -10e-6) & (z <= 10e-6)
 
     # --- reference value at point closest to zero ---
     z0_index = np.argmin(np.abs(z))
@@ -84,27 +91,32 @@ for v in [13,14,15,16,17]:
 
     def U_trap(d):
         """Trap energy relative to the center potential"""
-        return e * (V_interp(d) - V0)
+        return e * (V_interp(d) - V0 + V_interp(-d) - V0)
 
     def U_tot(d):
         return U_coul(d) + U_trap(d)
 
     # --- scan range restricted to available z data ---
-    pos = np.linspace(z_mask.min(), z_mask.max(), 500)
+    eps = 1e-12
+    pos = np.linspace(z_mask.min() + eps, z_mask.max() - eps, 500)
 
     U_c_vals = [U_coul(d) for d in pos]
     U_t_vals = [U_trap(d) for d in pos]
     U_vals   = [U_tot(d)  for d in pos]
 
-    # --- find minimum by grid search ---
-    idx_min = np.argmin(U_vals)
-    d_min = pos[idx_min]      # half-spacing [m]
-    E_min = U_vals[idx_min]   # minimum energy [J]
+    # restrict scan to positive d only
+    mask_pos = pos >= 0
+    pos_pos = pos[mask_pos]
+    U_vals_pos = np.array(U_vals)[mask_pos]
+
+    # find index of minimum in restricted range
+    idx_min = np.argmin(U_vals_pos)
+    d_min = pos_pos[idx_min]  # half-spacing [m]
+    E_min = U_vals_pos[idx_min]  # minimum energy [J]
 
     # --- print results ---
     print(f"Equilibrium half-spacing = {d_min*1e6:.2f} µm")
-    print(f"Equilibrium full-spacing = {2*d_min*1e6:.2f} µm")
-    print(f"Minimum energy = {E_min:.3e} J")
+    #print(f"Equilibrium full-spacing = {2*d_min*1e6:.2f} µm")
 
     # --- plot contributions ---
     plt.plot(pos*1e6, np.array(U_c_vals), label="Coulomb")
@@ -132,16 +144,14 @@ for v in [13,14,15,16,17]:
     V_small = V_vals[mask_2]
     U_small = e*(V_small-V0)
 
-    #V_interpolation_taylor
-
     # Fit a polynomial of degree 10
-    coeffs = np.polyfit(z_small, U_small, deg=10)
+    coeffs = np.polyfit(z_small, V_small, deg=8)
     poly = np.poly1d(coeffs)
 
 
     def U_trap_taylor(d):
         """Trap energy relative to the center potential"""
-        return poly(d)
+        return e*(poly(d) + poly(-d)-2*poly(0))
 
     def U_tot_taylor(d):
         return U_coul(d) + U_trap_taylor(d)
@@ -150,18 +160,22 @@ for v in [13,14,15,16,17]:
     U_t_vals = [U_trap_taylor(d) for d in z_small]
     U_vals   = [U_tot_taylor(d)  for d in pos]
 
-    # --- find minimum by grid search ---
-    idx_min = np.argmin(U_vals)
-    d_min = pos[idx_min]      # half-spacing [m]
-    E_min = U_vals[idx_min]   # minimum energy [J]
+    # restrict scan to positive d only
+    mask_pos = pos >= 0
+    pos_pos = pos[mask_pos]
+    U_vals_pos = np.array(U_vals)[mask_pos]
+
+    # find index of minimum in restricted range
+    idx_min = np.argmin(U_vals_pos)
+    d_min = pos_pos[idx_min]  # half-spacing [m]
+    E_min = U_vals_pos[idx_min]  # minimum energy [J]
 
     # --- print results ---
     print(f"Equilibrium half-spacing = {d_min*1e6:.2f} µm")
-    print(f"Equilibrium full-spacing = {2*d_min*1e6:.2f} µm")
-    print(f"Minimum energy = {E_min:.3e} J")
+    #print(f"Equilibrium full-spacing = {2*d_min*1e6:.2f} µm")
 
     # mark equilibrium point
-    plt.plot(d_min*1e6, E_min, "ro", label="Equilibrium point")
+    plt.plot(d_min*1e6, E_min, "ro", label="Equilibrium point Vbias = " + str(v))
 
     #plots
     plt.scatter(z_small*1e6, U_small,s=5, color="red", marker="o", label="points from COMSOL simulation")
@@ -173,7 +187,5 @@ for v in [13,14,15,16,17]:
     plt.title("Coulomb, Trap, and Total potentials (0–10 µm range)")
     plt.legend()
     plt.show()
-
-
-
-
+    l = trap_length_scale(Z=1)
+    print(f"Length scale ℓ = {l:.3e} m ({l * 1e6:.2f} µm)" + "d/2 from article = " + str(0.62996 * l))
