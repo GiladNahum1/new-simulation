@@ -1,6 +1,7 @@
 import numpy as np
 import importlib
 import PaulTrap
+import matplotlib
 import matplotlib.pyplot as plt
 import os
 from scipy.constants import k
